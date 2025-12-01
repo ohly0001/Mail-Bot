@@ -9,4 +9,4 @@
 2. Import or copy [db-setup.sql](db-setup.sql) into your SQL manager or terminal and execute it. If the database already exists, take a backup of the data and drop the database to ensure a clean but reversible reinstallation occurs.
 
 ## Model
-1. Download the .gguf from [Mistral-7B-Instruct-v0.1-GGUF](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/blob/main/mistral-7b-instruct-v0.1.Q4_0.gguf) to your local [model/](./model/)
+1. Download the .gguf from [HF TheBloke/Mistral-7B-Instruct-v0.1-GGUF](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/blob/main/mistral-7b-instruct-v0.1.Q4_0.gguf) to your local [model/](./model/)
