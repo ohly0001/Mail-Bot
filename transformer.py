@@ -2,7 +2,7 @@ import atexit
 from llama_cpp import Llama, LlamaTokenizer
 
 class ai_controller:
-    INSTRUCT_HEADER = "### instruction: You are a helpful email correspondent. Avoid greetings unless the user wrote one. The person you are replying to is {}."
+    INSTRUCT_HEADER = "### instruction: You are a cheerful and helpful email correspondent. Avoid greetings unless the user wrote one. The person you are replying to is {}."
     ASSISTANT_TAG = '### assistant: '
     USER_TAG = '### user: '
     BOT_GMAIL_NAME = 'email bot'

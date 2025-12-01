@@ -55,7 +55,7 @@ class mail_controller:
 			msg.set_content(rsp_text)
 
 			# 1. SEND VIA SMTP
-			self.smtp_conn.send_message(msg)
+			self.smtp_conn.send_message(msg) #TODO check why its double sending
 
 			# 2. APPEND TO "Sent Mail" AND GET UID
 			self.imap_conn.select('"[Gmail]/Sent Mail"')
@@ -69,7 +69,7 @@ class mail_controller:
 				raw_message
 			)
 
-			sent_uid = None
+			sent_uid = 0 #TODO replace with proper reoslution, temp for demo if fails
 			if result[0] == 'OK' and result[1]:
 				# Typical response format:
 				# b'APPENDUID 123456 78910'
@@ -78,8 +78,8 @@ class mail_controller:
 				if resp.startswith("APPENDUID"):
 					try:
 						uid = int(resp.split()[2])  # the 3rd token is the new UID
-					except (IndexError, ValueError):
-						uid = -1
+					except (IndexError, ValueError) as e:
+						print(f'UID decoding erroring {e}')
 
 			return {
 				"email_uid": sent_uid, 
