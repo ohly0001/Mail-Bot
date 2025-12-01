@@ -1,0 +1,7 @@
+.env
+__pycache__/
+dev-only/
+model/*
+
+!README.md
+!env-template.txt

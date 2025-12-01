@@ -1,0 +1,26 @@
+FAST_SCAN_INTERVAL=300
+SLOW_SCAN_INTERVAL=3600
+MESSAGE_THROTTLING=12
+
+MAIL_IMAP_HOST=imap.gmail.com
+MAIL_IMAP_USER=`Bot inbox address goes here...`
+MAIL_IMAP_PASSWORD=hrxz ccyl nqvd iudp
+MAIL_IMAP_INBOX=INBOX
+
+MAIL_SMTP_HOST=smtp.gmail.com
+MAIL_SMTP_PORT=465
+MAIL_SMTP_USER=`Bot outbox address goes here...`
+MAIL_SMTP_PASSWORD=`Google app password goes here...`
+
+MODEL_PATH=./model/mistral-7b-instruct-v0.1.Q4_0.gguf
+MODEL_CONTEXT_SIZE=1024
+MODEL_THREAD_COUNT=8
+MODEL_GPU_LAYERS=32
+MODEL_END=### assistant: 
+MODEL_STOP=### user: 
+MODEL_VERBOSE=False
+
+MYSQL_HOST=localhost
+MYSQL_USER=`MySQL user name goes here...`
+MYSQL_PASSWORD=`MySQL user password goes here...`
+MYSQL_DB=Mailbot
