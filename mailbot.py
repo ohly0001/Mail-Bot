@@ -4,7 +4,7 @@ import time
 from os import getenv
 from dotenv import load_dotenv
 
-from mailing import mail_controller
+from mailing_v2 import mail_controller
 from persistence import db_controller
 from transformer import ai_controller
 
