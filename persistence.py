@@ -3,12 +3,6 @@ import mysql.connector
 from mysql.connector import Error
 
 class db_controller:
-    INSERT_MAIL = "INSERT INTO emails (email_uid, email_parent_id, email_id, subject_line, sender_name, sender_address, body_text, sent_on) VALUES (%(email_uid)s, %(email_parent_id)s, %(email_id)s, %(subject_line)s, %(sender_name)s, %(sender_address)s, %(body_text)s, %(sent_on)s);"
-
-    SELECT_MAIL_BY_PARENT = "SELECT email_uid, email_id, email_parent_id, subject_line, sender_name, sender_address, body_text, sent_on FROM emails WHERE email_parent_id = %s;"
-
-    SELECT_WHITELIST = "SELECT whitelist_uid, whitelisted_name, whitelisted_address, whitelisted_on FROM address_whitelist;"
-
     def __init__(self, mysql_conn_params: dict[str, str]):
         try:
             self.mysql_conn_params = mysql_conn_params
@@ -23,48 +17,64 @@ class db_controller:
 
     def select_whitelist(self):
         try:
-            self.mycursor.execute(self.SELECT_WHITELIST)
+            self.mycursor.execute("SELECT whitelist_uid, whitelisted_name, whitelisted_address, whitelisted_on FROM address_whitelist;")
             results = self.mycursor.fetchall()
-            print(f"{len(results)} whitelist entries(s) selected")
+            print(f"{self.mycursor.rowcount} whitelist entries(s) selected")
             return results
         except Error as err:
             print(f"Failed to fetch whitelist: {err}")
             exit(1)
 
-    def insert_email(self, email: dict):
+    def insert_email(self, email: dict, references: list[str] = None, recipients: list[dict] = None):
         try:
-            self.mycursor.execute(self.INSERT_MAIL, email)
+            self.mycursor.execute(
+                "INSERT INTO emails (email_uid, email_parent_id, email_id, subject_line, sender_name, from_address, body_text, sent_on, token_count) VALUES (%(email_uid)s, %(email_parent_id)s, %(email_id)s, %(subject_line)s, %(sender_name)s, %(from_address)s, %(body_text)s, %(sent_on)s, %(token_count)s);", 
+                email
+            )
+            
+            # only add last reference if parent id already in references
+            if references:
+                self.mycursor.execute("SELECT * FROM email_references WHERE email_parent_id = %s LIMIT 1;", (references[0],))
+                if self.mycursor.rowcount == 0:
+                    if email['email_parent_id'] not in references:
+                        references.append(email["email_parent_id"])
+                    self.mycursor.executemany(
+                        "INSERT INTO email_references (email_parent_id, email_child_id) VALUES (%s, %s)", 
+                        [(references[0], references[i]) for i in range(1, len(references))]
+                    )
+                else:
+                    self.mycursor.execute(
+                        "INSERT INTO email_references (email_parent_id, email_child_id) VALUES (%s, %s)", 
+                        (references[0], email['email_parent_id'])
+                    )
+                    
+            if recipients:
+                self.mycursor.executemany(
+                    "INSERT INTO email_recipients (email_id, recipient_address, isCC) VALUES (%s, %s, %s)", 
+                    [(email['email_id'], r['address'], r['isCC']) for r in recipients]
+                )
+            
             self.mydb.commit()
             print("Email inserted")
         except Error as err:
             self.mydb.rollback()
             print(f"Failed to insert email: {err}")
 
-    def insert_emails(self, emails: list[dict]):
-        try:
-            self.mycursor.executemany(self.INSERT_MAIL, emails)
-            self.mydb.commit()
-            print(f"{self.mycursor.rowcount} email(s) inserted")
-        except Error as err:
-            self.mydb.rollback()
-            print(f"Failed to insert emails: {err}")
+    def insert_emails(self, emails: list[dict], references: list[list[str]], recipients: list[list[str]]):
+        pass
 
-    def select_email_thread(self, parent_message_id: str):
-        """Fetches all emails in a thread given the parent Message-ID"""
+    def select_email_thread(self, reference_root_id: str):
+        """Fetches the root email and all emails in a thread given the thread reference root"""
         try:
-            results = []
-            current_parent = parent_message_id
-            while current_parent:
-                self.mycursor.execute(self.SELECT_MAIL_BY_PARENT, (current_parent,))
-                row = self.mycursor.fetchone()
-                if not row:
-                    break
-                results.append(row)
-                current_parent = row['email_parent_id']
+            self.mycursor.execute(
+                "SELECT * FROM emails WHERE email_id = %s UNION ALL SELECT e.* FROM emails e INNER JOIN email_references r ON e.email_id = r.email_child_id WHERE r.email_parent_id = %s ORDER BY sent_on ASC;", 
+                (reference_root_id, reference_root_id)
+            )
+            results = self.mycursor.fetchall()
             print(f"{len(results)} email(s) selected in thread")
             return results
         except Error as err:
-            print(f"Failed to retrieve thread: {err}")
+            print(f"Failed to fetch thread: {err}")
             return []
 
     def close(self):
