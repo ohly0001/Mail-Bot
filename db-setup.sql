@@ -9,7 +9,8 @@ CREATE TABLE address_whitelist (
 );
 
 CREATE TABLE emails (
-    email_uid INT UNSIGNED PRIMARY KEY,
+    email_uid_unique INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email_uid INT UNSIGNED NULL,
     email_parent_id VARCHAR(255) NULL,
     email_id VARCHAR(255) NOT NULL UNIQUE,
     subject_line VARCHAR(512),
