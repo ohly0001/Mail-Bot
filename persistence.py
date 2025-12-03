@@ -8,7 +8,7 @@ class db_controller:
             self.mysql_conn_params = mysql_conn_params
             self.mydb = mysql.connector.connect(**mysql_conn_params)
             self.mycursor = self.mydb.cursor(dictionary=True)
-            self.mydb.rollback() #clear any lingering queries on start
+            self.mydb.rollback() #clear any lingering queries that may have been externally executed
         except Error as err:
             print(f"Failed to connect to DB: {err}")
             exit(1)
@@ -25,7 +25,9 @@ class db_controller:
             print(f"Failed to fetch whitelist: {err}")
             exit(1)
 
-    def insert_email(self, email: dict, references: list[str] = None, recipients: list[dict] = None):
+    def insert_email(self, email: dict):
+        # references: list[str]
+        # recipients: list[dict[str,Any]]
         try:
             self.mycursor.execute(
                 "INSERT INTO emails (email_uid, email_parent_id, email_id, subject_line, sender_name, from_address, body_text, sent_on, token_count) VALUES (%(email_uid)s, %(email_parent_id)s, %(email_id)s, %(subject_line)s, %(sender_name)s, %(from_address)s, %(body_text)s, %(sent_on)s, %(token_count)s);", 
@@ -33,25 +35,26 @@ class db_controller:
             )
             
             # only add last reference if parent id already in references
-            if references:
-                self.mycursor.execute("SELECT * FROM email_references WHERE email_parent_id = %s LIMIT 1;", (references[0],))
+            if email['references']:
+                self.mycursor.execute("SELECT * FROM email_references WHERE email_parent_id = %s LIMIT 1;", (email['references'][0],))
+                self.mycursor.fetchone()
                 if self.mycursor.rowcount == 0:
-                    if email['email_parent_id'] not in references:
-                        references.append(email["email_parent_id"])
+                    if email['email_parent_id'] not in email['references']:
+                        email['references'].append(email["email_parent_id"])
                     self.mycursor.executemany(
                         "INSERT INTO email_references (email_parent_id, email_child_id) VALUES (%s, %s)", 
-                        [(references[0], references[i]) for i in range(1, len(references))]
+                        [(email['references'][0], email['references'][i]) for i in range(1, len(email['references']))]
                     )
                 else:
                     self.mycursor.execute(
                         "INSERT INTO email_references (email_parent_id, email_child_id) VALUES (%s, %s)", 
-                        (references[0], email['email_parent_id'])
+                        (email['references'][0], email['email_parent_id'])
                     )
                     
-            if recipients:
+            if email['recipients']:
                 self.mycursor.executemany(
                     "INSERT INTO email_recipients (email_id, recipient_address, isCC) VALUES (%s, %s, %s)", 
-                    [(email['email_id'], r['address'], r['isCC']) for r in recipients]
+                    [(email['email_id'], r['address'], r['isCC']) for r in email['recipients']]
                 )
             
             self.mydb.commit()
@@ -60,8 +63,9 @@ class db_controller:
             self.mydb.rollback()
             print(f"Failed to insert email: {err}")
 
-    def insert_emails(self, emails: list[dict], references: list[list[str]], recipients: list[list[str]]):
-        pass
+    def insert_emails(self, emails: list[dict]):
+        for email in emails:
+            self.insert_email(email)
 
     def select_email_thread(self, reference_root_id: str):
         """Fetches the root email and all emails in a thread given the thread reference root"""
@@ -71,7 +75,7 @@ class db_controller:
                 (reference_root_id, reference_root_id)
             )
             results = self.mycursor.fetchall()
-            print(f"{len(results)} email(s) selected in thread")
+            print(f"{self.mycursor.rowcount} email(s) selected in thread")
             return results
         except Error as err:
             print(f"Failed to fetch thread: {err}")
@@ -79,7 +83,7 @@ class db_controller:
 
     def close(self):
         try:
-            self.mydb.rollback()
+            self.mydb.rollback() #clear any   from premature shutdown
             if self.mycursor:
                 self.mycursor.close()
             if self.mydb:
