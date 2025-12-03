@@ -13,7 +13,7 @@ CREATE TABLE registered_users (
 CREATE TABLE email_thread (
     thread_id INT UNSIGNED AUTO_INCREMENT,
     thread_subject VARCHAR(512),
-    bot_reply_mode ENUM('natural', 'lazy', 'eager', 'idle') DEFAULT 'lazy', --TODO switch to natural when feature add
+    bot_reply_mode ENUM('natural', 'lazy', 'eager', 'idle') DEFAULT 'lazy', -- TODO switch to natural when feature add
     bot_filter_mode ENUM('none', 'exclude', 'include', 'all') DEFAULT 'all', 
     started_on DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(thread_id)
