@@ -103,7 +103,7 @@ try:
                         # Respond only when a certain heuristic threshold is met (mimicking interest and converstional relevance)
                         pass
                     elif cmd == 'mode lazy': 
-                        # Respond only when the bots name Mistral or a command is included
+                        # Respond only when the bots name `Mistral` or a command is included
                         pass
                     elif cmd == 'mode eager': 
                         # Responds to every user thread received
