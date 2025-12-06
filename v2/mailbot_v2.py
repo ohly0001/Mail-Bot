@@ -3,6 +3,7 @@ import random
 import time
 from os import getenv
 from dotenv import find_dotenv, load_dotenv
+import atexit
 
 #from mailing_v2 import mail_controller
 #from persistence_v2 import db_controller
@@ -12,10 +13,11 @@ from mailbot_transformer import transformer
 class MailBot:
     def __init__(self):
         self.logger = Logger(self)
+        self.logger.info('Starting Up')
         
         path = find_dotenv()
         if not path:
-            print("Failed to find .env")
+            self.logger.error("Failed to find .env")
             exit(1)
         load_dotenv(path)
         
@@ -35,6 +37,20 @@ class MailBot:
         max_tokens = int(getenv('MODEL_MAX_OUTPUT_TOKENS'))
         
         self.transformer = transformer(model_params, max_tokens)
+        
+        atexit.register(self.close)
+        
+        self.logger.info('Running')
+        self.logger.flush()
+        
+    def close(self):
+        self.logger.info("Shutting Down")
+        
+        self.transformer.close()
+        
+        
+        self.logger.info("Shut Down")
+        self.logger.flush()
 
 if __name__ == '__main__':
     mailbot = MailBot()

@@ -7,16 +7,10 @@ import threading
 class Logger:
     rows = []
     _lock = threading.Lock()
-    _exit_registered = False
     _base_path = os.path.join(os.path.dirname(__file__), "logs")
 
     def __init__(self, attached):
         self.classname = attached.__class__.__name__
-
-        # Only register exit once
-        if not Logger._exit_registered:
-            atexit.register(Logger.flush)
-            Logger._exit_registered = True
 
     def _add(self, level, message, err=None):
         ts = datetime.now(tzlocal()).strftime("%x %X")

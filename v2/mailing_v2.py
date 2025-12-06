@@ -6,8 +6,6 @@ from email.header import decode_header, make_header
 from email import message_from_bytes
 from dateutil.tz import tzlocal
 from datetime import datetime
-import atexit
-import time
 
 class mail_controller:
     def __init__(self, mail_conn_params, whitelist):
@@ -17,7 +15,6 @@ class mail_controller:
         self.smtp_conn = None
         self._connect_imap()
         self._connect_smtp()
-        atexit.register(self.close)
 
     # ------------------- Connection Helpers -------------------
     def _connect_imap(self):

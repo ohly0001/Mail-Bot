@@ -1,11 +1,11 @@
 import atexit
 from llama_cpp import Llama, LlamaTokenizer
-from mailbot_logging import logger
+from mailbot_logging import Logger
 
 class transformer:
     def __init__(self, model_params: dict[str, str], max_output_tokens=255):
         try:
-            self.logger = logger(self)
+            self.logger = Logger(self)
             
             self.model_params = model_params
             self.model = Llama(**model_params)
@@ -14,16 +14,15 @@ class transformer:
 
             # Estimate reserved tokens (use placeholder name)
             self.reserved_tokens = self.token_count(self.INSTRUCT_HEADER.format('user')) + self.token_count(self.ASSISTANT_TAG) + max_output_tokens
-            atexit.register(self._close_)
 
         except Exception as e:
             print(f"Failed to setup model: {e}")
             exit(3)
             
-    def _close_(self):
+    def close(self):
         try:
             # Release resource allocation
             del self.model
             del self.tokenizer
         except Exception as e:
-            print(f"Failed to free resources: {e}")
+            self.logger.error("Failed to free resources", e)
