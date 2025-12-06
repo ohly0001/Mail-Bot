@@ -4,14 +4,14 @@ import time
 from os import getenv
 from dotenv import load_dotenv
 
-from mailing_v2 import mail_controller
+from mailing import mail_controller
 from persistence import db_controller
 from transformer import ai_controller
 
 # -------------------------
 # Step 0: Initialization
 # -------------------------
-load_dotenv()
+load_dotenv(r".\v1\.env")
 
 FAST_SCAN_INTERVAL = int(getenv('FAST_SCAN_INTERVAL'))  # e.g., 5 min
 SLOW_SCAN_INTERVAL = int(getenv('SLOW_SCAN_INTERVAL'))  # e.g., 1 hour
