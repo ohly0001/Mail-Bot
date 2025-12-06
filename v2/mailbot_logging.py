@@ -1,6 +1,7 @@
 import atexit
 import os
 from datetime import datetime
+import traceback
 from dateutil.tz import tzlocal
 import threading
 
@@ -15,7 +16,9 @@ class Logger:
     def _add(self, level, message, err=None):
         ts = datetime.now(tzlocal()).strftime("%x %X")
         if err is not None:
-            message = f"{message} - {err}"
+            # Include full stack trace if err is an exception
+            stack = ''.join(traceback.format_exception(type(err), err, err.__traceback__))
+            message = f"{message} - {stack}"
         with Logger._lock:
             Logger.rows.append(f"{ts} - {self.classname} - {level} - {message}\n")
 

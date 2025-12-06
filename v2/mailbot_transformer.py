@@ -2,7 +2,12 @@ import atexit
 from llama_cpp import Llama, LlamaTokenizer
 from mailbot_logging import Logger
 
-class transformer:
+class Transformer:
+    INSTRUCT_HEADER = "### instruction: You are a cheerful and helpful email correspondent. Avoid greetings unless the user wrote one. The person you are replying to is {}."
+    ASSISTANT_TAG = '### assistant: '
+    USER_TAG = '### user: '
+    BOT_GMAIL_NAME = 'email bot'
+
     def __init__(self, model_params: dict[str, str], max_output_tokens=255):
         try:
             self.logger = Logger(self)
@@ -18,6 +23,9 @@ class transformer:
         except Exception as e:
             print(f"Failed to setup model: {e}")
             exit(3)
+            
+    def token_count(self, text: str) -> int:
+        return len(self.tokenizer.encode(text))
             
     def close(self):
         try:

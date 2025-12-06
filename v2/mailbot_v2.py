@@ -1,14 +1,11 @@
-import os
-import random
-import time
 from os import getenv
 from dotenv import find_dotenv, load_dotenv
 import atexit
 
-#from mailing_v2 import mail_controller
-#from persistence_v2 import db_controller
 from mailbot_logging import Logger
-from mailbot_transformer import transformer
+from mailbot_transformer import Transformer
+from mailbot_mailing import Mail
+from mailbot_db import DB
 
 class MailBot:
     def __init__(self):
@@ -35,8 +32,28 @@ class MailBot:
             'verbose': bool(getenv('MODEL_VERBOSE'))
         }
         max_tokens = int(getenv('MODEL_MAX_OUTPUT_TOKENS'))
+        self.transformer = Transformer(model_params, max_tokens)
         
-        self.transformer = transformer(model_params, max_tokens)
+        mysql_conn_params = {
+            'host': getenv('MYSQL_HOST'),
+            'user': getenv('MYSQL_USER'),
+            'password': getenv('MYSQL_PASSWORD'),
+            'database': getenv('MYSQL_DB')
+        }
+        self.db = DB(mysql_conn_params)
+        registered_users = self.db.select_registered_users()
+        
+        mail_conn_params = {
+            'imap_host': getenv('MAIL_IMAP_HOST'),
+            'imap_user': getenv('MAIL_IMAP_USER'),
+            'imap_password': getenv('MAIL_IMAP_PASSWORD'),
+            'imap_inbox': getenv('MAIL_IMAP_INBOX'),
+            'smtp_host': getenv('MAIL_SMTP_HOST'),
+            'smtp_port': int(getenv('MAIL_SMTP_PORT')),
+            'smtp_user': getenv('MAIL_SMTP_USER'),
+            'smtp_password': getenv('MAIL_SMTP_PASSWORD')
+        }
+        self.mail = Mail(mail_conn_params, registered_users)
         
         atexit.register(self.close)
         
@@ -47,7 +64,8 @@ class MailBot:
         self.logger.info("Shutting Down")
         
         self.transformer.close()
-        
+        self.db.close()
+        self.mail.close()
         
         self.logger.info("Shut Down")
         self.logger.flush()
