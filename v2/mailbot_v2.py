@@ -12,6 +12,12 @@ class MailBot:
         self.logger = Logger(self)
         self.logger.info('Starting Up')
         
+        self.transformer = None
+        self.db = None
+        self.mail = None
+        
+        atexit.register(self.close)
+        
         path = find_dotenv()
         if not path:
             self.logger.error("Failed to find .env")
@@ -55,17 +61,18 @@ class MailBot:
         }
         self.mail = Mail(mail_conn_params, registered_users)
         
-        atexit.register(self.close)
-        
         self.logger.info('Running')
         self.logger.flush()
         
     def close(self):
         self.logger.info("Shutting Down")
         
-        self.transformer.close()
-        self.db.close()
-        self.mail.close()
+        if self.transformer:
+            self.transformer.close()
+        if self.db:
+            self.db.close()
+        if self.mail:
+            self.mail.close()
         
         self.logger.info("Shut Down")
         self.logger.flush()
